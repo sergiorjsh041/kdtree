@@ -23,3 +23,5 @@ external/*/.vscode/
 # No ignorar la carpeta external/sdsl si la tienes manualmente
 !external/sdsl/
 
+CMakeCache.txt
+
