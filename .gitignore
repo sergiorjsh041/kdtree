@@ -1,0 +1,25 @@
+# Archivos generados por el compilador
+*.o
+*.obj
+*.exe
+*.out
+
+# Directorios de compilación
+build/
+
+# Archivos temporales de tu editor o IDE
+.idea/
+.vscode/
+
+# Archivos específicos del sistema operativo
+.DS_Store
+Thumbs.db
+
+# Ignorar solo archivos temporales dentro de external
+external/*/build/
+external/*/.idea/
+external/*/.vscode/
+
+# No ignorar la carpeta external/sdsl si la tienes manualmente
+!external/sdsl/
+
