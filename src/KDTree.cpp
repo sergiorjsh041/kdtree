@@ -1,11 +1,12 @@
 #include "KDTree.h"
 #include <iostream>
 #include <cmath>
+#include <map>
 
 using namespace std;
 
 // Función recursiva para generar las combinaciones
-void generate_combinations(int depth, vector<int>& current_combination, const vector<int>& inf, const vector<int>& sup, vector<vector<int>>& result) {
+void generate_combinations(long long depth, vector<long long>& current_combination, const vector<long long>& inf, const vector<long long>& sup, vector<vector<long long>>& result) {
     // Si hemos alcanzado la profundidad d, agregamos la combinación actual a los resultados
     if (depth == inf.size()) {
         result.push_back(current_combination);
@@ -13,44 +14,47 @@ void generate_combinations(int depth, vector<int>& current_combination, const ve
     }
 
     // Iterar sobre el rango de la dimensión actual (de inf[depth] a sup[depth])
-    for (int i = inf[depth]; i <= sup[depth]; ++i) {
+    for (long long i = inf[depth]; i <= sup[depth]; ++i) {
         current_combination[depth] = i;  // Asignamos el valor de la dimensión actual
         generate_combinations(depth + 1, current_combination, inf, sup, result);  // Llamada recursiva para la siguiente dimensión
     }
 }
 
 // Funciones sacadas del libro del profesor Gonzalo Navarro
-bool childrenlabeled(bit_vector bv, int v,int l, int sigma){ 
+bool childrenlabeled(bit_vector bv, long long v,long long l, long long sigma){ 
     return bv[sigma*(v-1)+l-1]==1;
 }
 
-int labeledchild(rank_support_v<1> rank, int v, int l, int sigma){
+long long labeledchild(rank_support_v<1> rank, long long v, long long l, long long sigma){
     return rank(sigma*(v-1)+l)+1;
 }
 
+Grid::Grid() {
+    next=0;
+}
 
 
 // Constructor de la clase Grid
-Grid::Grid(int d, int S) {
+Grid::Grid(long long d, long long S) {
     ranges.resize(d, {1, S});
 }
 
 // Constructor de la clase Response
-Response::Response(int d,bool use_bi) {
+Response::Response(long long d,bool use_bi) {
     if (use_bi){
         bv.resize(2);
         bv[0]=0;
         bv[1]=0;
     } else {
     bv.resize(pow(2, d));
-    for (int i=0;i<pow(2,d);i++){
+    for (long long i=0;i<pow(2,d);i++){
         bv[i]=0;
     }
     }
 }
 
 // Constructor de la clase KDTree
-KDTree::KDTree(const vector<vector<int>>& pts, int S, int d, bool use_bi) : points(pts), S(S), d(d) {
+KDTree::KDTree(const vector<vector<long long>>& pts, long long S, long long d, bool use_bi) : points(pts), S(S), d(d) {
     Grid root(d, S);
     for (auto& p : points) {
         root.points.insert(p);
@@ -77,7 +81,7 @@ void KDTree::build_tree() {
         Response resp = (this->*get_response)(g);
 
         representation.resize(representation.size()+resp.bv.size());
-        for (int i = 0; i < resp.bv.size();i++){
+        for (long long i = 0; i < resp.bv.size();i++){
             representation[i+representation.size()-resp.bv.size()]=resp.bv[i];
             
         }
@@ -102,17 +106,18 @@ void KDTree::build_tree() {
     
     }
     
-    cout << representation <<endl;
+    //cout << representation <<endl;
 }
 
 // Algoritmo get_resp que genera el bitvector y las subgrillas
 Response KDTree::get_resp(Grid& g) {
     Response resp(d, false);
-    vector<vector<pair<int, int>>> subranges(pow(2, d));   
+    /*
+    vector<vector<pair<long long, long long>>> subranges(pow(2, d));   
 
-    for (int i = 0; i < pow(2, d); ++i) {
-        for (int j = 0; j < d; ++j) {
-            int mid = (g.ranges[j].second - g.ranges[j].first + 1) / 2;  // Para asegurar divisiones en mitades exactas
+    for (long long i = 0; i < pow(2, d); ++i) {
+        for (long long j = 0; j < d; ++j) {
+            long long mid = (g.ranges[j].second - g.ranges[j].first + 1) / 2;  // Para asegurar divisiones en mitades exactas
             if (i & (1 << j)) {
                 subranges[i].push_back({g.ranges[j].first + mid, g.ranges[j].second});
             } else {
@@ -120,13 +125,69 @@ Response KDTree::get_resp(Grid& g) {
             }
         }
     }
+       */
+    std::map<long long, Grid> subgrids;
+   
+ /*
 
-    vector<Grid> subgrids(pow(2, d), Grid(d, S));
+vector<long long> nonemptyindex;
+
+
+
+long long index = 0;
+for (long long i = 0 ;i <d;i++){
+    long long mid = (g.ranges[i].second-g.ranges[i].first+1)/2;
+    if (p[i] >= g.ranges[i].first+mid){
+        index += (long long) pow(2,i)
+    }
+
+
+}
+subgrids[index].points.insert(p);
+subgrids[index].next=(g.next+1)%d;
+resp.bv[index] = 1;
+subgrids[index].ranges = subranges[index]
+nonemptyindex.push_back(index);
+
+
+for (auto& index : nonemptyindex){
+    resp.subgrids.push_back(subgrids[index]);
+}
+ 
+ */
+ 
+    vector<long long> nonemptyindex;
+   
     
     for (auto& p : g.points) {
-        for (int i = 0; i < pow(2, d); ++i) {
+        long long index=0;
+        vector<pair<long long, long long>> subrange;
+        for (long long i = 0; i<d;i++){
+            long long mid = (g.ranges[i].second-g.ranges[i].first+1)/2;
+            if (p[i]>=g.ranges[i].first+mid){
+                index += (long long) pow(2,i);
+                subrange.push_back({g.ranges[i].first+mid,g.ranges[i].second});
+            } else {
+                subrange.push_back({g.ranges[i].first,g.ranges[i].first+mid-1});
+            
+            }
+        } 
+        
+        if (std::find(nonemptyindex.begin(), nonemptyindex.end(), index) == nonemptyindex.end()) {
+            Grid thisgrid = Grid(d,S);
+            subgrids.insert({index,thisgrid});
+            
+            nonemptyindex.push_back(index);
+            resp.bv[index]=1;
+            subgrids[index].next=(g.next+1)%d;
+            subgrids[index].ranges=subrange;
+        }
+        
+        subgrids[index].points.insert(p);
+        /*
+        for (long long i = 0; i < pow(2, d); ++i) {
             bool in_subgrid = true;
-            for (int j = 0; j < d; ++j) {
+            for (long long j = 0; j < d; ++j) {
                 if (p[j] < subranges[i][j].first || p[j] > subranges[i][j].second) {
                     in_subgrid = false;
                     break;
@@ -140,12 +201,18 @@ Response KDTree::get_resp(Grid& g) {
                 // Asignar los rangos de subranges a las subgrillas
                 subgrids[i].ranges = subranges[i];
             }
-        }
+        }*/
     }
-    for (int i = 0; i < subgrids.size(); ++i) {
+    
+    /*
+    for (long long i = 0; i < subgrids.size(); ++i) {
         if (!subgrids[i].points.empty()) {
             resp.subgrids.push_back(subgrids[i]);
         }
+    }*/
+    
+    for (auto& index : nonemptyindex){
+        resp.subgrids.push_back(subgrids[index]);
     }
 
     return resp;
@@ -155,14 +222,14 @@ Response KDTree::get_resp(Grid& g) {
 Response KDTree::get_resp_bi(Grid& g) {
     Response resp(d,true);
 
-    vector<vector<pair<int, int>>> subranges(2);
+    vector<vector<pair<long long, long long>>> subranges(2);
         
-    int axis = g.next;
+    long long axis = g.next;
        
-    for (int i = 0; i < 2; ++i) {
-        for (int j = 0; j < d; ++j) {
+    for (long long i = 0; i < 2; ++i) {
+        for (long long j = 0; j < d; ++j) {
             if (j==axis){
-                int mid = (g.ranges[j].second - g.ranges[j].first + 1) / 2;  // Para asegurar divisiones en mitades exactas
+                long long mid = (g.ranges[j].second - g.ranges[j].first + 1) / 2;  // Para asegurar divisiones en mitades exactas
                 if (i ==1) {
                     subranges[i].push_back({g.ranges[j].first + mid, g.ranges[j].second});
                 } else {
@@ -180,9 +247,9 @@ Response KDTree::get_resp_bi(Grid& g) {
     // Dividir los puntos en subgrillas según los rangos
     vector<Grid> subgrids(2, Grid(d, S));
     for (auto& p : g.points) {
-        for (int i = 0; i < 2; ++i) {
+        for (long long i = 0; i < 2; ++i) {
             bool in_subgrid = true;
-            for (int j = 0; j < d; ++j) {
+            for (long long j = 0; j < d; ++j) {
                 if (p[j] < subranges[i][j].first || p[j] > subranges[i][j].second) {
                     in_subgrid = false;
                     break;
@@ -203,7 +270,7 @@ Response KDTree::get_resp_bi(Grid& g) {
 
     // Imprimir las subgrillas generadas con sus rangos actualizados
     
-    for (int i = 0; i < subgrids.size(); ++i) {
+    for (long long i = 0; i < subgrids.size(); ++i) {
         if (!subgrids[i].points.empty()) {
          
             resp.subgrids.push_back(subgrids[i]);
@@ -214,51 +281,51 @@ Response KDTree::get_resp_bi(Grid& g) {
 }
 
 
-void KDTree::report(KDTree t, vector<pair<int,int>> ranges){
-    vector<int> resp(d,0);
+void KDTree::report(KDTree t, vector<pair<long long,long long>> ranges){
+    vector<long long> resp(d,0);
     rank_support_v<1> rank_1(&(t.representation));
     if (bi){
-        vector<int> S(d,t.S);
+        vector<long long> S(d,t.S);
         report_bi_aux(1,ranges,resp,S,t.representation,rank_1);
     } else {
         report_aux(1,ranges,resp,t.S,t.representation,rank_1);
     }
 }
 
-void KDTree::report_aux(int v, vector<pair<int, int>> ranges, vector<int> resp, int S, bit_vector bv, rank_support_v<1> rank_1) {
+void KDTree::report_aux(long long v, vector<pair<long long, long long>> ranges, vector<long long> resp, long long S, bit_vector bv, rank_support_v<1> rank_1) {
     if (S == 1) {
         cout << "####\nPoint reported: ";
-        for (int i : resp) {
+        for (long long i : resp) {
             cout << i + 1 << " ";  // Imprimir los puntos reportados
         }
         cout << endl<<"####\n";
     } else {
-        int l = S / 2;
-        vector<int> inf;
-        vector<int> sup;
+        long long l = S / 2;
+        vector<long long> inf;
+        vector<long long> sup;
 
         // Calcular los rangos inf y sup para cada dimensión
-        for (int i = 0; i < d; i++) {
-            int inf_val = ceil((double)(max(ranges[i].first - resp[i], 1)) / (double) l);
-            int sup_val = ceil((double)(min(ranges[i].second - resp[i], S)) / (double) l);
+        for (long long i = 0; i < d; i++) {
+            long long inf_val = ceil((double)(max(ranges[i].first - resp[i],(long long) 1)) / (double) l);
+            long long sup_val = ceil((double)(min(ranges[i].second - resp[i], S)) / (double) l);
             inf.push_back(inf_val);
             sup.push_back(sup_val);
         }
 
         // Contenedor para almacenar las combinaciones
-        vector<vector<int>> combinations;
+        vector<vector<long long>> combinations;
 
         // Variable temporal para la combinación actual
-        vector<int> current_combination(d); // Para almacenar la combinación de cada dimensión
+        vector<long long> current_combination(d); // Para almacenar la combinación de cada dimensión
         // Llamar a la función recursiva para generar las combinaciones
         generate_combinations(0, current_combination, inf, sup, combinations);
 
         
         for (const auto& combination : combinations) {
 
-            int offset = combination[0];
+            long long offset = combination[0];
 
-            for (int i = 1; i < combination.size(); i++) {
+            for (long long i = 1; i < combination.size(); i++) {
                 offset += pow(2, i) * (combination[i] - 1);
             }
 
@@ -266,10 +333,10 @@ void KDTree::report_aux(int v, vector<pair<int, int>> ranges, vector<int> resp, 
             // Verificar si la subgrilla está etiquetada y acceder a la subgrilla correspondiente
             if (childrenlabeled(bv, v, offset, pow(2,d))) {
             
-                int newv = labeledchild(rank_1, v, offset, pow(2,d));
-                vector<int> newresp;
+                long long newv = labeledchild(rank_1, v, offset, pow(2,d));
+                vector<long long> newresp;
 
-                for (int i = 0; i < d; i++) {
+                for (long long i = 0; i < d; i++) {
                     newresp.push_back(resp[i] + (combination[i] - 1) * l);
                 }
 
@@ -281,43 +348,43 @@ void KDTree::report_aux(int v, vector<pair<int, int>> ranges, vector<int> resp, 
     }
 }
 
-void KDTree::report_bi_aux(int v, vector<pair<int, int>> ranges, vector<int> resp, vector<int> S, bit_vector bv, rank_support_v<1> rank_1) {
+void KDTree::report_bi_aux(long long v, vector<pair<long long, long long>> ranges, vector<long long> resp, vector<long long> S, bit_vector bv, rank_support_v<1> rank_1) {
 
     if (S[0] == 1) {
         cout << "####\nPoint reported: ";
-        for (int i : resp) {
+        for (long long i : resp) {
             cout << i + 1 << " ";  // Imprimir los puntos reportados
         }
         cout << endl<<"####\n";
     } else {
-        int l = S[0] / 2;
-        int inf = ceil((double)(max(ranges[0].first - resp[0], 1)) / (double) l);
-        int sup = ceil((double)(min(ranges[0].second - resp[0], S[0])) / (double) l);
+        long long l = S[0] / 2;
+        long long inf = ceil((double)(max(ranges[0].first - resp[0], (long long) 1)) / (double) l);
+        long long sup = ceil((double)(min(ranges[0].second - resp[0], S[0])) / (double) l);
 
-        for (int i = inf; i <= sup; i++) {
-            int offset = i;
+        for (long long i = inf; i <= sup; i++) {
+            long long offset = i;
 
 
             // Verificar si la subgrilla está etiquetada y acceder a la subgrilla correspondiente
             if (childrenlabeled(bv, v, offset, 2)) {
-                int newv = labeledchild(rank_1, v, offset, 2);
-                vector<int> newresp;
+                long long newv = labeledchild(rank_1, v, offset, 2);
+                vector<long long> newresp;
 
-                for (int j = 1; j < d; j++) {
+                for (long long j = 1; j < d; j++) {
                     newresp.push_back(resp[j]);
                 }
                 newresp.push_back(resp[0] + (i - 1) * l);
 
           
 
-                vector<pair<int, int>> newranges = ranges;
+                vector<pair<long long, long long>> newranges = ranges;
 
                 // Rotar el primer rango
-                pair<int, int> first = newranges.front();
+                pair<long long, long long> first = newranges.front();
                 newranges.erase(newranges.begin());
                 newranges.push_back(first);
 
-                vector<int> newS = S;
+                vector<long long> newS = S;
                 newS.erase(newS.begin());
                 newS.push_back(l);
 
