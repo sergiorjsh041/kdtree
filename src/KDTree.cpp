@@ -71,7 +71,7 @@ KDTree::KDTree(const vector<vector<long long>>& pts, long long S, long long d, b
     }
 }
 
-// Función principal de construcción: genera bitvector y divide las grillas
+// Funcion principal de construccion: genera bitvector y divide las grillas
 void KDTree::build_tree() {
     
     while (!grids.empty()) {
