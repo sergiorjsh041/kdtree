@@ -163,7 +163,7 @@ int main() {
                 vector<vector<long long>> points_normal_50_vec(points_normal_50.begin(), points_normal_50.end());
                 vector<vector<long long>> points_normal_75_vec(points_normal_75.begin(), points_normal_75.end());
 
-                // Construir árboles
+                // Construir arboles
                 vector<KDTree> trees;
                 vector<string> tree_types;
                 vector<string> filenames;
